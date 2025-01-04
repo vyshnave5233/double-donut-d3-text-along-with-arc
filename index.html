@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <title>Interactive Double Ring Donut Chart</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+    <link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+    <style>
+        body {
+            font-family: 'Pacifico', sans-serif;
+            fill: #333333;
+            font-size: 16px;
+            text-align: center;
+        }
+        .donutArcs, .innerDonutArcs {
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+        }
+        .selected {
+            stroke: #333;
+            stroke-width: 2px;
+        }
+    </style>
+  </head>
+  <body>
+    <div id="chart"></div>
+    <script>
+        ////////////////////////////////////////////////////////////
+        //////////////////////// Set-up ////////////////////////////
+        ////////////////////////////////////////////////////////////
+
+        var screenWidth = window.innerWidth;
+
+        var margin = {left: 20, top: 20, right: 20, bottom: 20},
+            width = Math.min(screenWidth, 500) - margin.left - margin.right,
+            height = Math.min(screenWidth, 500) - margin.top - margin.bottom;
+                    
+        var svg = d3.select("#chart").append("svg")
+                    .attr("width", (width + margin.left + margin.right))
+                    .attr("height", (height + margin.top + margin.bottom))
+                   .append("g").attr("class", "wrapper")
+                    .attr("transform", "translate(" + (width / 2 + margin.left) + "," + (height / 2 + margin.top) + ")");
+
+        ////////////////////////////////////////////////////////////// 
+        ///////////////////// Data &  Scales ///////////////////////// 
+        ////////////////////////////////////////////////////////////// 
+
+        var outerDonutData = [
+            {name: "Antelope", value: 15},
+            {name: "Bear", value: 9},
+            {name: "Cheetah", value: 19},
+            {name: "Dolphin", value: 12},
+            {name: "Elephant", value: 14},
+            {name: "Flamingo", value: 21},
+            {name: "Giraffe", value: 18},
+            {name: "Other", value: 8}
+        ];
+
+        var innerDonutData = [
+            {name: "Group A", value: 30},
+            {name: "Group B", value: 25},
+            {name: "Group C", value: 45}
+        ];
+
+        var outerColorScale = d3.scale.linear()
+           .domain([1,3.5,6])
+           .range(["#2c7bb6", "#ffffbf", "#d7191c"])
+           .interpolate(d3.interpolateHcl);
+
+        var innerColorScale = d3.scale.ordinal()
+           .domain(["Group A", "Group B", "Group C"])
+           .range(["#74c476", "#9e9ac8", "#fd8d3c"]);
+
+        // Define the base arcs
+        var outerArc = d3.svg.arc()
+            .innerRadius(width*0.75/2) 
+            .outerRadius(width*0.75/2 + 30);
+
+        var innerArc = d3.svg.arc()
+            .innerRadius(width*0.75/2 - 50) 
+            .outerRadius(width*0.75/2 - 20);
+
+        // Define the hover arcs with larger outer radius
+        var outerArcHover = d3.svg.arc()
+            .innerRadius(width*0.75/2) 
+            .outerRadius(width*0.75/2 + 40);  // Increased outer radius
+
+        var innerArcHover = d3.svg.arc()
+            .innerRadius(width*0.75/2 - 50) 
+            .outerRadius(width*0.75/2 - 10);  // Increased outer radius
+
+        var pie = d3.layout.pie()
+            .startAngle(-90 * Math.PI/180)
+            .endAngle(-90 * Math.PI/180 + 2*Math.PI)
+            .value(function(d) { return d.value; })
+            .padAngle(.01)
+            .sort(null);
+         
+        ////////////////////////////////////////////////////////////// 
+        //////////////////// Create Donut Chart ////////////////////// 
+        ////////////////////////////////////////////////////////////// 
+
+        // Create the outer ring
+        svg.selectAll(".outerDonutArcs")
+            .data(pie(outerDonutData))
+            .enter().append("path")
+            .attr("class", "donutArcs")
+            .attr("d", outerArc)
+            .style("fill", function(d,i) {
+                if(i === 7) return "#CCCCCC";
+                else return outerColorScale(i); 
+            })
+            .on("mouseover", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("d", outerArcHover)
+                    .style("opacity", 0.8);
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("d", outerArc)
+                    .style("opacity", 1);
+            })
+            .on("click", function(d) {
+                alert("Outer Ring: " + d.data.name + "\nValue: " + d.data.value);
+            })
+            .each(function(d,i) {
+                var firstArcSection = /(^.+?)L/;     
+                var newArc = firstArcSection.exec( d3.select(this).attr("d") )[1];
+                newArc = newArc.replace(/,/g , " ");
+                
+                if (d.endAngle > 90 * Math.PI/180) {
+                    var startLoc = /M(.*?)A/,
+                        middleLoc = /A(.*?)0 0 1/,
+                        endLoc = /0 0 1 (.*?)$/;
+                    var newStart = endLoc.exec( newArc )[1];
+                    var newEnd = startLoc.exec( newArc )[1];
+                    var middleSec = middleLoc.exec( newArc )[1];
+                    newArc = "M" + newStart + "A" + middleSec + "0 0 0 " + newEnd;
+                }
+                
+                svg.append("path")
+                    .attr("class", "hiddenDonutArcs")
+                    .attr("id", "donutArc"+i)
+                    .attr("d", newArc)
+                    .style("fill", "none");
+            });
+
+        // Create the inner ring
+        svg.selectAll(".innerDonutArcs")
+            .data(pie(innerDonutData))
+            .enter().append("path")
+            .attr("class", "innerDonutArcs")
+            .attr("d", innerArc)
+            .style("fill", function(d) { 
+                return innerColorScale(d.data.name); 
+            })
+            .on("mouseover", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("d", innerArcHover)
+                    .style("opacity", 0.8);
+            })
+            .on("mouseout", function() {
+                d3.select(this)
+                    .transition()
+                    .duration(200)
+                    .attr("d", innerArc)
+                    .style("opacity", 1);
+            })
+            .on("click", function(d) {
+                alert("Inner Ring: " + d.data.name + "\nValue: " + d.data.value);
+            })
+            .each(function(d,i) {
+                var firstArcSection = /(^.+?)L/;     
+                var newArc = firstArcSection.exec( d3.select(this).attr("d") )[1];
+                newArc = newArc.replace(/,/g , " ");
+                
+                if (d.endAngle > 90 * Math.PI/180) {
+                    var startLoc = /M(.*?)A/,
+                        middleLoc = /A(.*?)0 0 1/,
+                        endLoc = /0 0 1 (.*?)$/;
+                    var newStart = endLoc.exec( newArc )[1];
+                    var newEnd = startLoc.exec( newArc )[1];
+                    var middleSec = middleLoc.exec( newArc )[1];
+                    newArc = "M" + newStart + "A" + middleSec + "0 0 0 " + newEnd;
+                }
+                
+                svg.append("path")
+                    .attr("class", "hiddenDonutArcs")
+                    .attr("id", "innerArc"+i)
+                    .attr("d", newArc)
+                    .style("fill", "none");
+            });
+
+        // Add outer ring labels
+        svg.selectAll(".outerDonutText")
+            .data(pie(outerDonutData))
+            .enter().append("text")
+            .attr("class", "donutText")
+            .attr("dy", function(d,i) { 
+                return (d.endAngle > 90 * Math.PI/180 ? 18 : -11); 
+            })
+            .append("textPath")
+            .attr("startOffset","50%")
+            .style("text-anchor","middle")
+            .attr("xlink:href",function(d,i){return "#donutArc"+i;})
+            .text(function(d){return d.data.name;});
+
+        // Add inner ring labels
+        svg.selectAll(".innerDonutText")
+            .data(pie(innerDonutData))
+            .enter().append("text")
+            .attr("class", "donutText")
+            .attr("dy", function(d,i) { 
+                return (d.endAngle > 90 * Math.PI/180 ? 18 : -11); 
+            })
+            .append("textPath")
+            .attr("startOffset","50%")
+            .style("text-anchor","middle")
+            .attr("xlink:href",function(d,i){return "#innerArc"+i;})
+            .text(function(d){return d.data.name;});
+    </script>
+  </body>
+</html>
