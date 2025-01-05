@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-    <title>Interactive Double Ring Donut Chart</title>
+ 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
     <link href='http://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
     <style>
@@ -20,14 +20,15 @@
             stroke: #333;
             stroke-width: 2px;
         }
+        .donutText {
+            font-size: 14px;  /* Reduced font size for better fit */
+        }
     </style>
   </head>
   <body>
     <div id="chart"></div>
     <script>
-        ////////////////////////////////////////////////////////////
-        //////////////////////// Set-up ////////////////////////////
-        ////////////////////////////////////////////////////////////
+      
 
         var screenWidth = window.innerWidth;
 
@@ -40,26 +41,21 @@
                     .attr("height", (height + margin.top + margin.bottom))
                    .append("g").attr("class", "wrapper")
                     .attr("transform", "translate(" + (width / 2 + margin.left) + "," + (height / 2 + margin.top) + ")");
-
-        ////////////////////////////////////////////////////////////// 
         ///////////////////// Data &  Scales ///////////////////////// 
-        ////////////////////////////////////////////////////////////// 
-
         var outerDonutData = [
-            {name: "Antelope", value: 15},
-            {name: "Bear", value: 9},
-            {name: "Cheetah", value: 19},
+            {name: "Antelopevdfefsd", value: 15},
+            {name: "Beareec", value: 9},
+            {name: "Cheetahccdsd", value: 19},
             {name: "Dolphin", value: 12},
             {name: "Elephant", value: 14},
             {name: "Flamingo", value: 21},
-            {name: "Giraffe", value: 18},
-            {name: "Other", value: 8}
         ];
 
         var innerDonutData = [
             {name: "Group A", value: 30},
-            {name: "Group B", value: 25},
-            {name: "Group C", value: 45}
+            {name: "Group Bscascscsa", value: 25},
+            {name: "Group C", value: 45},
+            {name: "Group D", value: 45}
         ];
 
         var outerColorScale = d3.scale.linear()
@@ -68,90 +64,94 @@
            .interpolate(d3.interpolateHcl);
 
         var innerColorScale = d3.scale.ordinal()
-           .domain(["Group A", "Group B", "Group C"])
-           .range(["#74c476", "#9e9ac8", "#fd8d3c"]);
+           .domain(["Group A", "Group B", "Group C", "Group D"])
+           .range(["#74c476", "#9e9ac8", "#fd8d3c", "#e6550d"]);
 
         // Define the base arcs
         var outerArc = d3.svg.arc()
-            .innerRadius(width*0.75/2) 
-            .outerRadius(width*0.75/2 + 30);
+            .innerRadius(width*0.65/2) 
+            .outerRadius(width*0.85/2);  // Adjusted for better label fit
 
         var innerArc = d3.svg.arc()
-            .innerRadius(width*0.75/2 - 50) 
-            .outerRadius(width*0.75/2 - 20);
+            .innerRadius(width*0.35/2)
+            .outerRadius(width*0.65/2);
 
         // Define the hover arcs with larger outer radius
         var outerArcHover = d3.svg.arc()
-            .innerRadius(width*0.75/2) 
-            .outerRadius(width*0.75/2 + 40);  // Increased outer radius
+            .innerRadius(width*0.65/2) 
+            .outerRadius(width*0.85/2 + 10);
 
         var innerArcHover = d3.svg.arc()
-            .innerRadius(width*0.75/2 - 50) 
-            .outerRadius(width*0.75/2 - 10);  // Increased outer radius
+            .innerRadius(width*0.35/2)
+            .outerRadius(width*0.75/2 + 10);
+var pieOuter = d3.layout.pie()
+    .startAngle(-120 * Math.PI/180) // Adjusted start angle for outer pie
+    .endAngle(-120 * Math.PI/180 + 2*Math.PI)
+    .value(function() { return 1; }) // Each slice gets an equal portion
+    .padAngle(.01)
+    .sort(null);
 
-        var pie = d3.layout.pie()
-            .startAngle(-90 * Math.PI/180)
-            .endAngle(-90 * Math.PI/180 + 2*Math.PI)
-            .value(function(d) { return d.value; })
-            .padAngle(.01)
-            .sort(null);
-         
-        ////////////////////////////////////////////////////////////// 
-        //////////////////// Create Donut Chart ////////////////////// 
-        ////////////////////////////////////////////////////////////// 
-
-        // Create the outer ring
-        svg.selectAll(".outerDonutArcs")
-            .data(pie(outerDonutData))
-            .enter().append("path")
-            .attr("class", "donutArcs")
+  var pieInner = d3.layout.pie()
+    .startAngle(-90 * Math.PI/180) // Default start angle for inner pie
+    .endAngle(-90 * Math.PI/180 + 2*Math.PI)
+    .value(function() { return 1; }) // Each slice gets an equal portion
+    .padAngle(.01)
+    .sort(null);
+// Create the outer ring
+svg.selectAll(".outerDonutArcs")
+    .data(pieOuter(outerDonutData))
+    .enter().append("path")
+    .attr("class", "donutArcs")
+    .attr("d", outerArc)
+    .style("fill", function(d, i) {
+        return i === 6 ? "#CCCCCC" : outerColorScale(i);
+    })
+    .on("mouseover", function() {
+        d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("d", outerArcHover)
+            // .style("opacity", 1);
+    })
+    .on("mouseout", function() {
+        d3.select(this)
+            .transition()
+            .duration(200)
             .attr("d", outerArc)
-            .style("fill", function(d,i) {
-                if(i === 7) return "#CCCCCC";
-                else return outerColorScale(i); 
-            })
-            .on("mouseover", function() {
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr("d", outerArcHover)
-                    .style("opacity", 0.8);
-            })
-            .on("mouseout", function() {
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .attr("d", outerArc)
-                    .style("opacity", 1);
-            })
-            .on("click", function(d) {
-                alert("Outer Ring: " + d.data.name + "\nValue: " + d.data.value);
-            })
-            .each(function(d,i) {
-                var firstArcSection = /(^.+?)L/;     
-                var newArc = firstArcSection.exec( d3.select(this).attr("d") )[1];
-                newArc = newArc.replace(/,/g , " ");
-                
-                if (d.endAngle > 90 * Math.PI/180) {
-                    var startLoc = /M(.*?)A/,
-                        middleLoc = /A(.*?)0 0 1/,
-                        endLoc = /0 0 1 (.*?)$/;
-                    var newStart = endLoc.exec( newArc )[1];
-                    var newEnd = startLoc.exec( newArc )[1];
-                    var middleSec = middleLoc.exec( newArc )[1];
-                    newArc = "M" + newStart + "A" + middleSec + "0 0 0 " + newEnd;
-                }
-                
-                svg.append("path")
-                    .attr("class", "hiddenDonutArcs")
-                    .attr("id", "donutArc"+i)
-                    .attr("d", newArc)
-                    .style("fill", "none");
-            });
+            .style("opacity", 1);
+    })
+    .on("click", function(d) {
+        alert("Outer Ring: " + d.data.name + "\nValue: " + d.data.value);
+    })
+    .each(function(d, i) {
+        var firstArcSection = /(^.+?)L/;
+        var newArc = firstArcSection.exec(d3.select(this).attr("d"))[1];
+        newArc = newArc.replace(/,/g, " ");
+
+        // Process all arcs where endAngle exceeds the threshold
+        if (d.endAngle > (120 * Math.PI) / 120) {
+            var startLoc = /M(.*?)A/,
+                middleLoc = /A(.*?)0 0 1/,
+                endLoc = /0 0 1 (.*?)$/;
+
+            // Flip arc components
+            var newStart = endLoc.exec(newArc)[1];
+            var newEnd = startLoc.exec(newArc)[1];
+            var middleSec = middleLoc.exec(newArc)[1];
+            newArc = "M" + newStart + "A" + middleSec + "0 0 0 " + newEnd;
+        }
+        // Append a hidden path for the fli
+        svg.append("path")
+            .attr("class", "hiddenDonutArcs")
+            .attr("id", "donutArc" + i)
+            .attr("d", newArc)
+            .style("fill", "none");
+    });
+
 
         // Create the inner ring
         svg.selectAll(".innerDonutArcs")
-            .data(pie(innerDonutData))
+            .data(pieInner(innerDonutData))
             .enter().append("path")
             .attr("class", "innerDonutArcs")
             .attr("d", innerArc)
@@ -163,7 +163,7 @@
                     .transition()
                     .duration(200)
                     .attr("d", innerArcHover)
-                    .style("opacity", 0.8);
+                    .style("opacity", 1);
             })
             .on("mouseout", function() {
                 d3.select(this)
@@ -180,7 +180,7 @@
                 var newArc = firstArcSection.exec( d3.select(this).attr("d") )[1];
                 newArc = newArc.replace(/,/g , " ");
                 
-                if (d.endAngle > 90 * Math.PI/180) {
+                if (d.endAngle > 120 * Math.PI/120) {
                     var startLoc = /M(.*?)A/,
                         middleLoc = /A(.*?)0 0 1/,
                         endLoc = /0 0 1 (.*?)$/;
@@ -194,36 +194,97 @@
                     .attr("class", "hiddenDonutArcs")
                     .attr("id", "innerArc"+i)
                     .attr("d", newArc)
-                    .style("fill", "none");
+                    .style("fill", "none")    
             });
+// Add outer ring labels for names
+svg.selectAll(".outerDonutText")
+    .data(pieOuter(outerDonutData))
+    .enter().append("text")
+    .attr("class", "donutText")
+    .attr("dy", function (d, i) {
+        return d.endAngle > 120 * Math.PI / 150 ? -25 : 25; // Adjust text position based on arc orientation
+    })
+    .append("textPath")
+    .attr("startOffset", "50%")
+    .style("text-anchor", function (d) {
+        return d.endAngle - d.startAngle > Math.PI ? "end" : "middle"; // Flip text-anchor if needed
+    })
+    .style("font-size", "12px") // Adjust font size for better readability
+    .style("fill", "#333") // Use a contrasting color
+    .attr("xlink:href", function (d, i) {
+        return "#donutArc" + i; // Reference the arc path
+    })
+    .text(function (d) {
+        return d.data.name.length > 15 ? d.data.name.slice(0, 12) + "..." : d.data.name; // Truncate if too long
+    });
 
-        // Add outer ring labels
-        svg.selectAll(".outerDonutText")
-            .data(pie(outerDonutData))
-            .enter().append("text")
-            .attr("class", "donutText")
-            .attr("dy", function(d,i) { 
-                return (d.endAngle > 90 * Math.PI/180 ? 18 : -11); 
-            })
-            .append("textPath")
-            .attr("startOffset","50%")
-            .style("text-anchor","middle")
-            .attr("xlink:href",function(d,i){return "#donutArc"+i;})
-            .text(function(d){return d.data.name;});
+// Add outer ring labels for values
+svg.selectAll(".outerDonutValue")
+    .data(pieOuter(outerDonutData))
+    .enter().append("text")
+    .attr("class", "donutValue")
+    .attr("dy", function (d, i) {
+        return d.endAngle > 120 * Math.PI / 150 ? -5 : 45; // Position values below the names
+    })
+    .append("textPath")
+    .attr("startOffset", "50%")
+    .style("text-anchor", function (d) {
+        return d.endAngle - d.startAngle > Math.PI ? "end" : "middle"; // Flip text-anchor if needed
+    })
+    .style("font-size", "10px") // Slightly smaller font size for values
+    .style("fill", "#666") // Use a lighter color for differentiation
+    .attr("xlink:href", function (d, i) {
+        return "#donutArc" + i; // Reference the arc path
+    })
+    .text(function (d) {
+        return d.data.value; // Display the value
+    });
+// Ensure text is not interactive and doesn't block pointer events
+svg.selectAll(".donutText")
+    .style("pointer-events", "none");
+// Add inner ring labels for names
+svg.selectAll(".innerDonutText")
+    .data(pieInner(innerDonutData))
+    .enter().append("text")
+    .attr("class", "donutText")
+    .attr("dy", function (d, i) {
+        return d.endAngle > 100 * Math.PI / 180 ? -23 : 25; // Adjust text position based on arc orientation
+    })
+    .append("textPath")
+    .attr("startOffset", "50%")
+    .style("text-anchor", "middle")
+    .attr("xlink:href", function (d, i) {
+        return "#innerArc" + i; // Reference the arc path
+    })
+    .text(function (d) {
+        return d.data.name; // Display the name
+    });
+      svg.selectAll(".outerDonutText, .outerDonutValue").each(function () {
+    this.parentNode.appendChild(this);
+});
 
-        // Add inner ring labels
-        svg.selectAll(".innerDonutText")
-            .data(pie(innerDonutData))
-            .enter().append("text")
-            .attr("class", "donutText")
-            .attr("dy", function(d,i) { 
-                return (d.endAngle > 90 * Math.PI/180 ? 18 : -11); 
-            })
-            .append("textPath")
-            .attr("startOffset","50%")
-            .style("text-anchor","middle")
-            .attr("xlink:href",function(d,i){return "#innerArc"+i;})
-            .text(function(d){return d.data.name;});
+// Add inner ring labels for values
+svg.selectAll(".innerDonutValue")
+    .data(pieInner(innerDonutData))
+    .enter().append("text")
+    .attr("class", "donutValue")
+    .attr("dy", function (d, i) {
+        return d.endAngle > 100 * Math.PI / 180 ? -5 : 45; // Position values below the names
+    })
+    .append("textPath")
+    .attr("startOffset", "50%")
+    .style("text-anchor", "middle")
+    .style("font-size", "10px") // Slightly smaller font size for values
+    .style("fill", "#666") // Use a lighter color for differentiation
+    .attr("xlink:href", function (d, i) {
+        return "#innerArc" + i; // Reference the arc path
+    })
+    .text(function (d) {
+        return d.data.value; // Display the value
+    });
+// Ensure text is not interactive and doesn't block pointer events
+svg.selectAll(".donutText, .donutValue")
+    .style("pointer-events", "none");      
     </script>
   </body>
 </html>
